@@ -1,8 +1,8 @@
 /*!
- \file CPU.h
- \brief Main CPU class
+ \file CPU64.h
+ \brief Main CPU 64 bits class
  \author Màrius Montón
- \date August 2018
+ \date February 2021
  */
 // SPDX-License-Identifier: GPL-3.0-or-later
 
@@ -31,7 +31,7 @@
  * @brief ISC_V CPU model
  * @param name name of the module
  */
-class CPU32: sc_core::sc_module {
+class CPU64: sc_core::sc_module {
 public:
 
 	/**
@@ -39,38 +39,38 @@ public:
 	 * @param trans transction to perfoem
 	 * @param delay time to annotate
 	 */
-	tlm_utils::simple_initiator_socket<CPU32> instr_bus;
+	tlm_utils::simple_initiator_socket<CPU64> instr_bus;
 
 	/**
 	 * @brief IRQ line socket
 	 * @param trans transction to perform (empty)
 	 * @param delay time to annotate
 	 */
-	tlm_utils::simple_target_socket<CPU32> irq_line_socket;
+	tlm_utils::simple_target_socket<CPU64> irq_line_socket;
 
 	/**
 	 * @brief Constructor
 	 * @param name Module name
 	 * @param PC   Program Counter initialize value
 	 */
-	CPU32(sc_core::sc_module_name name, uint32_t PC);
+	CPU64(sc_core::sc_module_name name, uint32_t PC);
 
 	/**
 	 * @brief Destructor
 	 */
-	~CPU32();
+	~CPU64();
 
 	MemoryInterface *mem_intf;
 
 private:
-	Registers<uint32_t> *register_bank;
+	Registers<uint64_t> *register_bank;
 	Performance *perf;
 	Log *log;
 	Instruction *inst;
-	C_extension<uint32_t> *c_inst;
-	M_extension<uint32_t> *m_inst;
-	A_extension<uint32_t> *a_inst;
-	BASE_ISA<uint32_t> *exec;
+	C_extension<uint64_t> *c_inst;
+	M_extension<uint64_t> *m_inst;
+	A_extension<uint64_t> *a_inst;
+	BASE_ISA<uint64_t> *exec;
 
 	tlm_utils::tlm_quantumkeeper *m_qk;
 

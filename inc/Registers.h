@@ -110,6 +110,7 @@
 /**
  * @brief Register file implementation
  */
+template<typename T>
 class Registers {
 public:
 
@@ -180,36 +181,6 @@ public:
 		t5 = x30,
 		t6 = x31
 	};
-	/**
-	 * Default constructor
-	 */
-	Registers();
-
-	/**
-	 * Set value for a register
-	 * @param reg_num register number
-	 * @param value   register value
-	 */
-	void setValue(int reg_num, int32_t value);
-
-	/**
-	 * Returns register value
-	 * @param  reg_num register number
-	 * @return         register value
-	 */
-	int32_t getValue(int reg_num);
-
-	/**
-	 * Returns PC value
-	 * @return PC value
-	 */
-	uint32_t getPC() const;
-
-	/**
-	 * Sets arbitraty value to PC
-	 * @param new_pc new address to PC
-	 */
-	void setPC(uint32_t new_pc);
 
 	/**
 	 * Increments PC couunter to next address
@@ -224,44 +195,230 @@ public:
 	}
 
 	/**
+	 * Default constructor
+	 */
+	Registers() {
+
+		perf = Performance::getInstance();
+
+		initCSR();
+
+		//std::cout << "Memory size: 0x" << std::hex << Memory::SIZE << std::endl;
+		//std::cout << "SP address: 0x" << std::hex << (0x10000000 / 4) - 1 << std::endl;
+
+		register_bank[sp] = Memory::SIZE - 4; // default stack at the end of the memory
+		register_PC = 0x80000000;       // default _start address
+	}
+
+
+	/**
+	 * Dump register data to console
+	 */
+	void dump(void) {
+		std::cout << "************************************" << std::endl;
+		std::cout << "Registers dump" << std::dec << std::endl;
+		std::cout << "x0 (zero):  " << std::right << std::setw(11)
+				<< register_bank[0];
+		std::cout << " x1 (ra):    " << std::right << std::setw(11)
+				<< register_bank[1];
+		std::cout << " x2 (sp):    " << std::right << std::setw(11)
+				<< register_bank[2];
+		std::cout << " x3 (gp):    " << std::right << std::setw(11)
+				<< register_bank[3] << std::endl;
+
+		std::cout << "x4 (tp):    " << std::right << std::setw(11)
+				<< register_bank[4];
+		std::cout << " x5 (t0):    " << std::right << std::setw(11)
+				<< register_bank[5];
+		std::cout << " x6 (t1):    " << std::right << std::setw(11)
+				<< register_bank[6];
+		std::cout << " x7 (t2):    " << std::right << std::setw(11)
+				<< register_bank[7] << std::endl;
+
+		std::cout << "x8 (s0/fp): " << std::right << std::setw(11)
+				<< register_bank[8];
+		std::cout << " x9 (s1):    " << std::right << std::setw(11)
+				<< register_bank[9];
+		std::cout << " x10 (a0):   " << std::right << std::setw(11)
+				<< register_bank[10];
+		std::cout << " x11 (a1):   " << std::right << std::setw(11)
+				<< register_bank[11] << std::endl;
+
+		std::cout << "x12 (a2):   " << std::right << std::setw(11)
+				<< register_bank[12];
+		std::cout << " x13 (a3):   " << std::right << std::setw(11)
+				<< register_bank[13];
+		std::cout << " x14 (a4):   " << std::right << std::setw(11)
+				<< register_bank[14];
+		std::cout << " x15 (a5):   " << std::right << std::setw(11)
+				<< register_bank[15] << std::endl;
+
+		std::cout << "x16 (a6):   " << std::right << std::setw(11)
+				<< register_bank[16];
+		std::cout << " x17 (a7):   " << std::right << std::setw(11)
+				<< register_bank[17];
+		std::cout << " x18 (s2):   " << std::right << std::setw(11)
+				<< register_bank[18];
+		std::cout << " x19 (s3):   " << std::right << std::setw(11)
+				<< register_bank[19] << std::endl;
+
+		std::cout << "x20 (s4):   " << std::right << std::setw(11)
+				<< register_bank[20];
+		std::cout << " x21 (s5):   " << std::right << std::setw(11)
+				<< register_bank[21];
+		std::cout << " x22 (s6):   " << std::right << std::setw(11)
+				<< register_bank[22];
+		std::cout << " x23 (s7):   " << std::right << std::setw(11)
+				<< register_bank[23] << std::endl;
+
+		std::cout << "x24 (s8):   " << std::right << std::setw(11)
+				<< register_bank[24];
+		std::cout << " x25 (s9):   " << std::right << std::setw(11)
+				<< register_bank[25];
+		std::cout << " x26 (s10):  " << std::right << std::setw(11)
+				<< register_bank[26];
+		std::cout << " x27 (s11):  " << std::right << std::setw(11)
+				<< register_bank[27] << std::endl;
+
+		std::cout << "x28 (t3):   " << std::right << std::setw(11)
+				<< register_bank[28];
+		std::cout << " x29 (t4):   " << std::right << std::setw(11)
+				<< register_bank[29];
+		std::cout << " x30 (t5):   " << std::right << std::setw(11)
+				<< register_bank[30];
+		std::cout << " x31 (t6):   " << std::right << std::setw(11)
+				<< register_bank[31] << std::endl;
+
+		std::cout << "PC: 0x" << std::hex << register_PC << std::dec << std::endl;
+		std::cout << "************************************" << std::endl;
+	}
+
+
+	/**
+	 * Set value for a register
+	 * @param reg_num register number
+	 * @param value   register value
+	 */
+	void setValue(int reg_num, T value) {
+		if ((reg_num != 0) && (reg_num < 32)) {
+			register_bank[reg_num] = value;
+			perf->registerWrite();
+		}
+	}
+
+	/**
+	 * Returns register value
+	 * @param  reg_num register number
+	 * @return         register value
+	 */
+	T getValue(int reg_num) {
+		if ((reg_num >= 0) && (reg_num < 32)) {
+			perf->registerRead();
+			return register_bank[reg_num];
+		} else {
+			return 0xFFFFFFFF;
+		}
+	}
+
+	/**
+	 * Returns PC value
+	 * @return PC value
+	 */
+	T getPC() const {
+		return register_PC;
+	}
+
+
+	/**
+	 * Sets arbitraty value to PC
+	 * @param new_pc new address to PC
+	 */
+	void setPC(T new_pc) {
+		register_PC = new_pc;
+	}
+
+	/**
 	 * @brief Get CSR value
 	 * @param csr CSR number to access
 	 * @return CSR value
 	 */
-	uint32_t getCSR(int csr);
+	T getCSR(int csr) {
+		T ret_value = 0;
+
+		switch (csr) {
+		case CSR_CYCLE:
+		case CSR_MCYCLE:
+			ret_value = (uint64_t) (sc_core::sc_time(
+					sc_core::sc_time_stamp()
+							- sc_core::sc_time(sc_core::SC_ZERO_TIME)).to_double())
+					& 0x00000000FFFFFFFF;
+			break;
+		case CSR_CYCLEH:
+		case CSR_MCYCLEH:
+			ret_value = (uint32_t) ((uint64_t) (sc_core::sc_time(
+					sc_core::sc_time_stamp()
+							- sc_core::sc_time(sc_core::SC_ZERO_TIME)).to_double())
+					>> 32 & 0x00000000FFFFFFFF);
+			break;
+		case CSR_TIME:
+			ret_value = (uint64_t) (sc_core::sc_time(
+					sc_core::sc_time_stamp()
+							- sc_core::sc_time(sc_core::SC_ZERO_TIME)).to_double())
+					& 0x00000000FFFFFFFF;
+			break;
+		case CSR_TIMEH:
+			ret_value = (uint32_t) ((uint64_t) (sc_core::sc_time(
+					sc_core::sc_time_stamp()
+							- sc_core::sc_time(sc_core::SC_ZERO_TIME)).to_double())
+					>> 32 & 0x00000000FFFFFFFF);
+			break;
+		[[likely]] default:
+			ret_value = CSR[csr];
+			break;
+		}
+		return ret_value;
+	}
 
 	/**
 	 * @brief Set CSR value
 	 * @param csr   CSR number to access
 	 * @param value new value to register
 	 */
-	void setCSR(int csr, uint32_t value);
+	void setCSR(int csr, T value) {
+		/* @FIXME: rv32mi-p-ma_fetch tests doesn't allow MISA to writable,
+		 * but Volume II: Privileged Architecture v1.10 says MISA is writable (?)
+		 */
+		if (csr != CSR_MISA) {
+			CSR[csr] = value;
+		}
+	}
 
-	/**
-	 * Dump register data to console
-	 */
-	void dump();
+
+	void initCSR() {
+		CSR[CSR_MISA] = MISA_MXL | MISA_M_EXTENSION | MISA_C_EXTENSION
+				| MISA_A_EXTENSION | MISA_I_BASE;
+		CSR[CSR_MSTATUS] = MISA_MXL;
+	}
+
+
 private:
 	/**
 	 * bank of registers (32 regs of 32bits each)
 	 */
-	std::array<int,32> register_bank = { {0} };
+	std::array<T,32> register_bank = { {0} };
 
 	/**
 	 * Program counter (32 bits width)
 	 */
-	uint32_t register_PC;
+	T register_PC;
 
 	/**
 	 * CSR registers (4096 maximum)
 	 */
-	//uint32_t CSR[4096];
-	std::unordered_map<unsigned int, uint32_t> CSR{0};
+	std::unordered_map<unsigned int, T> CSR{0};
 
 
 	Performance *perf;
-
-	void initCSR(void);
 };
 
 #endif

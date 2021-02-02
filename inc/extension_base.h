@@ -23,16 +23,11 @@
 #define EXCEPTION_CAUSE_LOAD_ADDR_MISALIGN    4
 #define EXCEPTION_CAUSE_LOAD_ACCESS_FAULT     5
 
+template<typename T>
 class extension_base {
 
 public:
-	extension_base(sc_dt::sc_uint<32> instr, Registers *register_bank,
-			MemoryInterface *mem_interface);
-	virtual ~extension_base() = 0;
 
-	void setInstr(uint32_t p_instr);
-	void RaiseException(uint32_t cause, uint32_t inst);
-	bool NOP();
 
 	/* pure virtual functions */
 	virtual int32_t opcode() const = 0;
@@ -69,11 +64,70 @@ public:
 	  m_instr.range(14, 12) = value;
 	}
 
-	virtual void dump() const;
+	extension_base(sc_dt::sc_uint<32> const instr,
+		Registers<T> *register_bank, MemoryInterface *mem_interface) :
+		m_instr(instr), regs(register_bank), mem_intf(mem_interface) {
+		perf = Performance::getInstance();
+		log = Log::getInstance();
+	}
+
+
+	virtual ~extension_base() =default;
+
+
+void setInstr(uint32_t p_instr) {
+	m_instr = sc_dt::sc_uint<32>(p_instr);
+}
+
+
+inline virtual void dump() const {
+	std::cout << std::hex << "0x" << m_instr << std::dec << std::endl;
+}
+
+
+void RaiseException(uint32_t cause, uint32_t inst) {
+	uint32_t new_pc, current_pc, m_cause;
+
+	current_pc = regs->getPC();
+	m_cause = regs->getCSR(CSR_MSTATUS);
+	m_cause |= cause;
+
+	new_pc = regs->getCSR(CSR_MTVEC);
+
+	regs->setCSR(CSR_MEPC, current_pc);
+
+	if (cause == EXCEPTION_CAUSE_ILLEGAL_INSTRUCTION) {
+		regs->setCSR(CSR_MTVAL, inst);
+	} else {
+		regs->setCSR(CSR_MTVAL, current_pc);
+	}
+
+	regs->setCSR(CSR_MCAUSE, cause);
+	regs->setCSR(CSR_MSTATUS, m_cause);
+
+	regs->setPC(new_pc);
+
+	log->SC_log(Log::ERROR) << "Exception! new PC 0x" << std::hex << new_pc
+			<< std::endl;
+
+	regs->dump();
+	std::cout << "Simulation time " << sc_core::sc_time_stamp() << std::endl;
+	perf->dump();
+
+	sc_core::sc_stop();
+}
+
+
+bool NOP() {
+
+	log->SC_log(Log::INFO) << "NOP" << "\n";
+
+	return true;
+}
 
 protected:
 	sc_dt::sc_uint<32> m_instr;
-	Registers *regs;
+	Registers<T> *regs;
 	Performance *perf;
 	Log *log;
 	MemoryInterface *mem_intf;
