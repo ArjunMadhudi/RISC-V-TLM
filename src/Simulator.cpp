@@ -32,7 +32,7 @@ std::string filename;
  * @brief Top simulation entity
  */
 SC_MODULE(Simulator) {
-	CPU *cpu;
+	CPU<uint32_t> *cpu;
 	Memory *MainMemory;
 	BusCtrl *Bus;
 	Trace *trace;
@@ -44,7 +44,7 @@ SC_MODULE(Simulator) {
 		MainMemory = new Memory("Main_Memory", filename);
 		start_PC = MainMemory->getPCfromHEX();
 
-		cpu = new CPU("cpu", start_PC);
+		cpu = new CPU<uint32_t>("cpu", start_PC);
 
 		Bus = new BusCtrl("BusCtrl");
 		trace = new Trace("Trace");
