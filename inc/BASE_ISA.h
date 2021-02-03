@@ -96,7 +96,7 @@ enum {
 	CSRRWI = 0b101,
 	CSRRSI = 0b110,
 	CSRRCI = 0b111,
-} Codes;
+};
 
 
 typedef enum {
@@ -354,16 +354,6 @@ public:
 		return m_instr.range(6, 0);
 	}
 
-	/*!
-	 \file BASE_ISA.cpp
-	 \brief RISC-V ISA implementation
-	 \author Màrius Montón
-	 \date August 2018
-	 */
-	// SPDX-License-Identifier: GPL-3.0-or-later
-
-	#include "BASE_ISA.h"
-
 	enum {
 		LUI = 0b0110111,
 		AUIPC = 0b0010111,
@@ -436,7 +426,7 @@ public:
 		CSRRWI = 0b101,
 		CSRRSI = 0b110,
 		CSRRCI = 0b111,
-	} Codes;
+	};
 
 	bool Exec_LUI() const {
 		int rd;
