@@ -58,14 +58,14 @@ public:
 	CPU(sc_core::sc_module_name const name, uint32_t PC) :
 			sc_module(name), instr_bus("instr_bus"), default_time(10,
 					sc_core::SC_NS) {
-		register_bank = new Registers<uint32_t>();
+		register_bank = new Registers<T>();
 		mem_intf = new MemoryInterface();
 
 		perf = Performance::getInstance();
 		log = Log::getInstance();
 
 		register_bank->setPC(PC);
-		register_bank->setValue(Registers<uint32_t>::sp, (0x10000000 / 4) - 1);
+		register_bank->setValue(Registers<T>::sp, (0x10000000 / 4) - 1);
 
 		irq_line_socket.register_b_transport(this, &CPU::call_interrupt);
 		interrupt = false;
@@ -78,10 +78,10 @@ public:
 				&CPU::invalidate_direct_mem_ptr);
 
 		inst = new Instruction(0);
-		exec = new BASE_ISA<uint32_t>(0, register_bank, mem_intf);
-		c_inst = new C_extension<uint32_t>(0, register_bank, mem_intf);
-		m_inst = new M_extension<uint32_t>(0, register_bank, mem_intf);
-		a_inst = new A_extension<uint32_t>(0, register_bank, mem_intf);
+		exec = new BASE_ISA<T>(0, register_bank, mem_intf);
+		c_inst = new C_extension<T>(0, register_bank, mem_intf);
+		m_inst = new M_extension<T>(0, register_bank, mem_intf);
+		a_inst = new A_extension<T>(0, register_bank, mem_intf);
 
 		m_qk = new tlm_utils::tlm_quantumkeeper();
 

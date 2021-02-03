@@ -86,7 +86,7 @@ inline virtual void dump() const {
 
 
 void RaiseException(uint32_t cause, uint32_t inst) {
-	uint32_t new_pc, current_pc, m_cause;
+	T new_pc, current_pc, m_cause;
 
 	current_pc = regs->getPC();
 	m_cause = regs->getCSR(CSR_MSTATUS);
