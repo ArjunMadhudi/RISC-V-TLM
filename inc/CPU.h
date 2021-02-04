@@ -101,6 +101,7 @@ public:
 		delete m_inst;
 		delete a_inst;
 		delete m_qk;
+		delete log;
 	}
 
 	/**

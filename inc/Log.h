@@ -35,6 +35,9 @@ public:
 	 */
 	static Log* getInstance();
 
+	~Log() {
+		std::cout << std::flush;
+	}
 	/**
 	 * @brief method to log some string
 	 * @param msg   mesasge string
