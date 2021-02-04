@@ -5,7 +5,6 @@
  \date August 2018
  */
 // SPDX-License-Identifier: GPL-3.0-or-later
-
 #ifndef Execute_H
 #define Execute_H
 
@@ -97,7 +96,6 @@ enum {
 	CSRRSI = 0b110,
 	CSRRCI = 0b111,
 };
-
 
 typedef enum {
 	OP_LUI,
@@ -350,7 +348,8 @@ public:
 	 * @brief Access to opcode field
 	 * @return return opcode field
 	 */
-	inline int32_t opcode() const override {
+	inline int32_t opcode() const override
+	{
 		return m_instr.range(6, 0);
 	}
 
@@ -429,7 +428,7 @@ public:
 	};
 
 	bool Exec_LUI() const {
-		int rd;
+		T rd;
 		uint32_t imm = 0;
 
 		rd = get_rd();
@@ -437,17 +436,17 @@ public:
 		regs->setValue(rd, imm);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "LUI x" << std::dec << rd << " <- 0x" << std::hex
-				<< imm << "\n";
+			log->SC_log(Log::INFO) << "LUI x" << std::dec << rd << " <- 0x"
+					<< std::hex << imm << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_AUIPC() const {
-		int rd;
+		T rd;
 		uint32_t imm = 0;
-		int new_pc;
+		T new_pc;
 
 		rd = get_rd();
 		imm = get_imm_U() << 12;
@@ -457,7 +456,7 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "AUIPC x" << std::dec << rd << " <- 0x"
-				<< std::hex << imm << " + PC (0x" << new_pc << ")" << "\n";
+					<< std::hex << imm << " + PC (0x" << new_pc << ")" << "\n";
 		}
 
 		return true;
@@ -465,8 +464,8 @@ public:
 
 	bool Exec_JAL() const {
 		int32_t mem_addr = 0;
-		int rd;
-		int new_pc, old_pc;
+		T rd;
+		T new_pc, old_pc;
 
 		rd = get_rd();
 		mem_addr = get_imm_J();
@@ -479,9 +478,9 @@ public:
 		regs->setValue(rd, old_pc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "JAL: x" << std::dec << rd << " <- 0x" << std::hex
-				<< old_pc << std::dec << ". PC + 0x" << std::hex << mem_addr
-				<< " -> PC (0x" << new_pc << ")" << "\n";
+			log->SC_log(Log::INFO) << "JAL: x" << std::dec << rd << " <- 0x"
+					<< std::hex << old_pc << std::dec << ". PC + 0x" << std::hex
+					<< mem_addr << " -> PC (0x" << new_pc << ")" << "\n";
 		}
 
 		return true;
@@ -489,8 +488,8 @@ public:
 
 	bool Exec_JALR() const {
 		uint32_t mem_addr = 0;
-		int rd, rs1;
-		int new_pc, old_pc;
+		T rd, rs1;
+		T new_pc, old_pc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -504,14 +503,14 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "JALR: x" << std::dec << rd << " <- 0x"
-				<< std::hex << old_pc + 4 << " PC <- 0x" << new_pc << "\n";
+					<< std::hex << old_pc + 4 << " PC <- 0x" << new_pc << "\n";
 		}
 		return true;
 	}
 
 	bool Exec_BEQ() const {
-		int rs1, rs2;
-		int new_pc = 0;
+		T rs1, rs2;
+		T new_pc = 0;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -525,19 +524,20 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BEQ x" << std::dec << rs1 << "(0x" << std::hex
-				<< regs->getValue(rs1) << ") == x" << std::dec << rs2 << "(0x"
-				<< std::hex << regs->getValue(rs2) << ")? -> PC (0x" << std::hex
-				<< new_pc << ")" << std::dec << "\n";
+			log->SC_log(Log::INFO) << "BEQ x" << std::dec << rs1 << "(0x"
+					<< std::hex << regs->getValue(rs1) << ") == x" << std::dec
+					<< rs2 << "(0x" << std::hex << regs->getValue(rs2)
+					<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
+					<< "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_BNE() const {
-		int rs1, rs2;
-		int new_pc = 0;
-		uint32_t val1, val2;
+		T rs1, rs2;
+		T new_pc = 0;
+		T val1, val2;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -554,18 +554,18 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BNE: x" << std::dec << rs1 << "(0x" << std::hex
-				<< val1 << ") == x" << std::dec << rs2 << "(0x" << std::hex << val2
-				<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
-				<< "\n";
+			log->SC_log(Log::INFO) << "BNE: x" << std::dec << rs1 << "(0x"
+					<< std::hex << val1 << ") == x" << std::dec << rs2 << "(0x"
+					<< std::hex << val2 << ")? -> PC (0x" << std::hex << new_pc
+					<< ")" << std::dec << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_BLT() const {
-		int rs1, rs2;
-		int new_pc = 0;
+		T rs1, rs2;
+		T new_pc = 0;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -578,19 +578,19 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BLT x" << std::dec << rs1 << "(0x" << std::hex
-				<< (int32_t) regs->getValue(rs1) << ") < x" << std::dec << rs2
-				<< "(0x" << std::hex << (int32_t) regs->getValue(rs2)
-				<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
-				<< "\n";
+			log->SC_log(Log::INFO) << "BLT x" << std::dec << rs1 << "(0x"
+					<< std::hex << (int32_t) regs->getValue(rs1) << ") < x"
+					<< std::dec << rs2 << "(0x" << std::hex
+					<< (int32_t) regs->getValue(rs2) << ")? -> PC (0x"
+					<< std::hex << new_pc << ")" << std::dec << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_BGE() const {
-		int rs1, rs2;
-		int new_pc = 0;
+		T rs1, rs2;
+		T new_pc = 0;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -603,19 +603,19 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BGE x" << std::dec << rs1 << "(0x" << std::hex
-				<< (int32_t) regs->getValue(rs1) << ") > x" << std::dec << rs2
-				<< "(0x" << std::hex << (int32_t) regs->getValue(rs2)
-				<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
-				<< "\n";
+			log->SC_log(Log::INFO) << "BGE x" << std::dec << rs1 << "(0x"
+					<< std::hex << (int32_t) regs->getValue(rs1) << ") > x"
+					<< std::dec << rs2 << "(0x" << std::hex
+					<< (int32_t) regs->getValue(rs2) << ")? -> PC (0x"
+					<< std::hex << new_pc << ")" << std::dec << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_BLTU() const {
-		int rs1, rs2;
-		int new_pc = 0;
+		T rs1, rs2;
+		T new_pc = 0;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -629,18 +629,19 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BLTU x" << std::dec << rs1 << "(0x" << std::hex
-				<< regs->getValue(rs1) << ") < x" << std::dec << rs2 << "(0x"
-				<< std::hex << regs->getValue(rs2) << ")? -> PC (0x" << std::hex
-				<< new_pc << ")" << std::dec << "\n";
+			log->SC_log(Log::INFO) << "BLTU x" << std::dec << rs1 << "(0x"
+					<< std::hex << regs->getValue(rs1) << ") < x" << std::dec
+					<< rs2 << "(0x" << std::hex << regs->getValue(rs2)
+					<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
+					<< "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_BGEU() const {
-		int rs1, rs2;
-		int new_pc = 0;
+		T rs1, rs2;
+		T new_pc = 0;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -653,18 +654,19 @@ public:
 		}
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "BGEU x" << std::dec << rs1 << "(0x" << std::hex
-				<< regs->getValue(rs1) << ") > x" << std::dec << rs2 << "(0x"
-				<< std::hex << regs->getValue(rs2) << ")? -> PC (0x" << std::hex
-				<< new_pc << ")" << std::dec << "\n";
+			log->SC_log(Log::INFO) << "BGEU x" << std::dec << rs1 << "(0x"
+					<< std::hex << regs->getValue(rs1) << ") > x" << std::dec
+					<< rs2 << "(0x" << std::hex << regs->getValue(rs2)
+					<< ")? -> PC (0x" << std::hex << new_pc << ")" << std::dec
+					<< "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_LB() const {
-		uint32_t mem_addr = 0;
-		int rd, rs1;
+		T mem_addr = 0;
+		T rd, rs1;
 		int32_t imm = 0;
 		int8_t data;
 
@@ -679,15 +681,16 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "LB: x" << rs1 << " + " << imm << " (@0x"
-				<< std::hex << mem_addr << std::dec << ") -> x" << rd << "\n";
+					<< std::hex << mem_addr << std::dec << ") -> x" << rd
+					<< "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_LH() const {
-		uint32_t mem_addr = 0;
-		int rd, rs1;
+		T mem_addr = 0;
+		T rd, rs1;
 		int32_t imm = 0;
 		int16_t data;
 
@@ -702,39 +705,20 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "LH: x" << rs1 << " + " << imm << " (@0x"
-				<< std::hex << mem_addr << std::dec << ") -> x" << rd << "\n";
+					<< std::hex << mem_addr << std::dec << ") -> x" << rd
+					<< "\n";
 		}
 
 		return true;
 	}
 
-	bool Exec_LW() const {
-		uint32_t mem_addr = 0;
-		int rd, rs1;
-		int32_t imm = 0;
-		uint32_t data;
-
-		rd = get_rd();
-		rs1 = get_rs1();
-		imm = get_imm_I();
-
-		mem_addr = imm + regs->getValue(rs1);
-		data = mem_intf->readDataMem(mem_addr, 4);
-		perf->dataMemoryRead();
-		regs->setValue(rd, data);
-
-		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << std::dec << "LW: x" << rs1 << "(0x" << std::hex
-				<< regs->getValue(rs1) << ") + " << std::dec << imm << " (@0x"
-				<< std::hex << mem_addr << std::dec << ") -> x" << rd << std::hex
-				<< " (0x" << data << ")" << "\n";
-		}
-		return true;
-	}
+	/* template specialization */
+	bool
+	Exec_LW() const;
 
 	bool Exec_LBU() const {
-		uint32_t mem_addr = 0;
-		int rd, rs1;
+		T mem_addr = 0;
+		T rd, rs1;
 		int32_t imm = 0;
 		uint8_t data;
 
@@ -749,14 +733,15 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "LBU: x" << rs1 << " + " << imm << " (@0x"
-				<< std::hex << mem_addr << std::dec << ") -> x" << rd << "\n";
+					<< std::hex << mem_addr << std::dec << ") -> x" << rd
+					<< "\n";
 		}
 		return true;
 	}
 
 	bool Exec_LHU() const {
-		uint32_t mem_addr = 0;
-		int rd, rs1;
+		T mem_addr = 0;
+		T rd, rs1;
 		int32_t imm = 0;
 		uint16_t data;
 
@@ -771,19 +756,24 @@ public:
 		regs->setValue(rd, data);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "LHU: x" << std::dec << rs1 << " + " << imm
-				<< " (@0x" << std::hex << mem_addr << std::dec << ") -> x" << rd
-				<< "(0x" << std::hex << data << ")" << "\n";
+			log->SC_log(Log::INFO) << "LHU: x" << std::dec << rs1 << " + "
+					<< imm << " (@0x" << std::hex << mem_addr << std::dec
+					<< ") -> x" << rd << "(0x" << std::hex << data << ")"
+					<< "\n";
 		}
 
 		return true;
 	}
 
+	/* template specialization */
+	bool
+	Exec_LD() const;
+
 	bool Exec_SB() const {
-		uint32_t mem_addr = 0;
-		int rs1, rs2;
+		T mem_addr = 0;
+		T rs1, rs2;
 		int32_t imm = 0;
-		uint32_t data;
+		T data;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -796,19 +786,19 @@ public:
 		perf->dataMemoryWrite();
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SB: x" << std::dec << rs2 << " -> x" << rs1
-				<< " + 0x" << std::hex << imm << " (@0x" << std::hex << mem_addr
-				<< std::dec << ")" << "\n";
+			log->SC_log(Log::INFO) << "SB: x" << std::dec << rs2 << " -> x"
+					<< rs1 << " + 0x" << std::hex << imm << " (@0x" << std::hex
+					<< mem_addr << std::dec << ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SH() const {
-		uint32_t mem_addr = 0;
-		int rs1, rs2;
+		T mem_addr = 0;
+		T rs1, rs2;
 		int32_t imm = 0;
-		uint32_t data;
+		T data;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -821,19 +811,19 @@ public:
 		perf->dataMemoryWrite();
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SH: x" << std::dec << rs2 << " -> x" << rs1
-				<< " + 0x" << std::hex << imm << " (@0x" << std::hex << mem_addr
-				<< std::dec << ")" << "\n";
+			log->SC_log(Log::INFO) << "SH: x" << std::dec << rs2 << " -> x"
+					<< rs1 << " + 0x" << std::hex << imm << " (@0x" << std::hex
+					<< mem_addr << std::dec << ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SW() const {
-		uint32_t mem_addr = 0;
-		int rs1, rs2;
+		T mem_addr = 0;
+		T rs1, rs2;
 		int32_t imm = 0;
-		uint32_t data;
+		T data;
 
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -846,17 +836,47 @@ public:
 		perf->dataMemoryWrite();
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SW: x" << std::dec << rs2 << "(0x" << std::hex
-				<< data << ") -> x" << std::dec << rs1 << " + 0x" << std::hex << imm
-				<< " (@0x" << std::hex << mem_addr << std::dec << ")" << "\n";
+			log->SC_log(Log::INFO) << "SW: x" << std::dec << rs2 << "(0x"
+					<< std::hex << data << ") -> x" << std::dec << rs1
+					<< " + 0x" << std::hex << imm << " (@0x" << std::hex
+					<< mem_addr << std::dec << ")" << "\n";
+		}
+		return true;
+	}
+
+	/*
+	 * Present only in RV64, template specialization
+	 */
+	template<uint64_t>
+	bool Exec_SD() const {
+		T mem_addr = 0;
+		T rs1, rs2;
+		int32_t imm = 0;
+		T data;
+
+		rs1 = get_rs1();
+		rs2 = get_rs2();
+		imm = get_imm_S();
+
+		mem_addr = imm + regs->getValue(rs1);
+		data = regs->getValue(rs2);
+
+		mem_intf->writeDataMem(mem_addr, data, 8);
+		perf->dataMemoryWrite();
+
+		if (log->getLogLevel() >= Log::INFO) {
+			log->SC_log(Log::INFO) << "SD: x" << std::dec << rs2 << "(0x"
+					<< std::hex << data << ") -> x" << std::dec << rs1
+					<< " + 0x" << std::hex << imm << " (@0x" << std::hex
+					<< mem_addr << std::dec << ")" << "\n";
 		}
 		return true;
 	}
 
 	bool Exec_ADDI() const {
-		int rd, rs1;
+		T rd, rs1;
 		int32_t imm = 0;
-		int32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -866,16 +886,16 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "ADDI: x" << std::dec << rs1 << " + " << imm
-				<< " -> x" << std::dec << rd << "(0x" << std::hex << calc << ")"
-				<< "\n";
+			log->SC_log(Log::INFO) << "ADDI: x" << std::dec << rs1 << " + "
+					<< imm << " -> x" << std::dec << rd << "(0x" << std::hex
+					<< calc << ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SLTI() const {
-		int rd, rs1;
+		T rd, rs1;
 		int32_t imm;
 
 		rd = get_rd();
@@ -896,7 +916,7 @@ public:
 	}
 
 	bool Exec_SLTIU() const {
-		int rd, rs1;
+		T rd, rs1;
 		int32_t imm;
 
 		rd = get_rd();
@@ -905,21 +925,21 @@ public:
 
 		if ((uint32_t) regs->getValue(rs1) < (uint32_t) imm) {
 			regs->setValue(rd, 1);
-			log->SC_log(Log::INFO) << "SLTIU: x" << rs1 << " < " << imm << " => "
-					<< "1 -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SLTIU: x" << rs1 << " < " << imm
+					<< " => " << "1 -> x" << rd << "\n";
 		} else {
 			regs->setValue(rd, 0);
-			log->SC_log(Log::INFO) << "SLTIU: x" << rs1 << " < " << imm << " => "
-					<< "0 -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SLTIU: x" << rs1 << " < " << imm
+					<< " => " << "0 -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_XORI() const {
-		int rd, rs1;
+		T rd, rs1;
 		int32_t imm;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -929,17 +949,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "XORI: x" << rs1 << " XOR " << imm << "-> x" << rd
-				<< "\n";
+			log->SC_log(Log::INFO) << "XORI: x" << rs1 << " XOR " << imm
+					<< "-> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_ORI() const {
-		int rd, rs1;
+		T rd, rs1;
 		int32_t imm;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -949,18 +969,18 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "ORI: x" << rs1 << " OR " << imm << "-> x" << rd
-				<< "\n";
+			log->SC_log(Log::INFO) << "ORI: x" << rs1 << " OR " << imm << "-> x"
+					<< rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_ANDI() const {
-		int rd, rs1;
+		T rd, rs1;
 		uint32_t imm;
-		uint32_t calc;
-		uint32_t aux;
+		T calc;
+		T aux;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -971,18 +991,18 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "ANDI: x" << rs1 << "(0x" << std::hex << aux
-				<< ") AND 0x" << imm << " -> x" << std::dec << rd << "(0x"
-				<< std::hex << calc << ")" << "\n";
+			log->SC_log(Log::INFO) << "ANDI: x" << rs1 << "(0x" << std::hex
+					<< aux << ") AND 0x" << imm << " -> x" << std::dec << rd
+					<< "(0x" << std::hex << calc << ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SLLI() {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1001,17 +1021,18 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SLLI: x" << std::dec << rs1 << " << " << shift
-				<< " -> x" << rd << "(0x" << std::hex << calc << ")" << "\n";
+			log->SC_log(Log::INFO) << "SLLI: x" << std::dec << rs1 << " << "
+					<< shift << " -> x" << rd << "(0x" << std::hex << calc
+					<< ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SRLI() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1023,17 +1044,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SRLI: x" << std::dec << rs1 << " >> " << shift
-				<< " -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SRLI: x" << std::dec << rs1 << " >> "
+					<< shift << " -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SRAI() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		int32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1045,16 +1066,16 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SRAI: x" << std::dec << rs1 << " >> " << shift
-				<< " -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SRAI: x" << std::dec << rs1 << " >> "
+					<< shift << " -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_ADD() const {
-		int rd, rs1, rs2;
-		uint32_t calc;
+		T rd, rs1, rs2;
+		T calc;
 		rd = get_rd();
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -1064,16 +1085,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "ADD: x" << std::dec << rs1 << " + x" << rs2
-				<< " -> x" << rd << std::hex << "(0x" << calc << ")" << "\n";
+			log->SC_log(Log::INFO) << "ADD: x" << std::dec << rs1 << " + x"
+					<< rs2 << " -> x" << rd << std::hex << "(0x" << calc << ")"
+					<< "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SUB() const {
-		int rd, rs1, rs2;
-		uint32_t calc;
+		T rd, rs1, rs2;
+		T calc;
 		rd = get_rd();
 		rs1 = get_rs1();
 		rs2 = get_rs2();
@@ -1082,17 +1104,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SUB: x" << rs1 << " - x" << rs2 << " -> x" << rd
-				<< "(" << calc << ")" << "\n";
+			log->SC_log(Log::INFO) << "SUB: x" << std::dec << rs1 << " - x" << rs2
+					<< " -> x" << rd << std::hex << "(0x" << calc << ")" << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SLL() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1104,15 +1126,15 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SLL: x" << rs1 << " << " << shift << " -> x"
-				<< rd << "\n";
+			log->SC_log(Log::INFO) << "SLL: x" << rs1 << " << " << shift
+					<< " -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SLT() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1132,7 +1154,7 @@ public:
 	}
 
 	bool Exec_SLTU() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1140,20 +1162,20 @@ public:
 
 		if ((uint32_t) regs->getValue(rs1) < (uint32_t) regs->getValue(rs2)) {
 			regs->setValue(rd, 1);
-			log->SC_log(Log::INFO) << "SLTU: x" << rs1 << " < x" << rs2 << " => "
-					<< "1 -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SLTU: x" << rs1 << " < x" << rs2
+					<< " => " << "1 -> x" << rd << "\n";
 		} else {
 			regs->setValue(rd, 0);
-			log->SC_log(Log::INFO) << "SLTU: x" << rs1 << " < x" << rs2 << " => "
-					<< "0 -> x" << rd << "\n";
+			log->SC_log(Log::INFO) << "SLTU: x" << rs1 << " < x" << rs2
+					<< " => " << "0 -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_XOR() const {
-		int rd, rs1, rs2;
-		uint32_t calc;
+		T rd, rs1, rs2;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1163,17 +1185,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "XOR: x" << rs1 << " XOR x" << rs2 << "-> x" << rd
-				<< "\n";
+			log->SC_log(Log::INFO) << "XOR: x" << rs1 << " XOR x" << rs2
+					<< "-> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SRL() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		uint32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1185,17 +1207,17 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SRL: x" << rs1 << " >> " << shift << " -> x"
-				<< rd << "\n";
+			log->SC_log(Log::INFO) << "SRL: x" << rs1 << " >> " << shift
+					<< " -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_SRA() const {
-		int rd, rs1, rs2;
+		T rd, rs1, rs2;
 		uint32_t shift;
-		int32_t calc;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1207,16 +1229,16 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SRA: x" << rs1 << " >> " << shift << " -> x"
-				<< rd << "\n";
+			log->SC_log(Log::INFO) << "SRA: x" << rs1 << " >> " << shift
+					<< " -> x" << rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_OR() const {
-		int rd, rs1, rs2;
-		uint32_t calc;
+		T rd, rs1, rs2;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1226,16 +1248,16 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "OR: x" << rs1 << " OR x" << rs2 << "-> x" << rd
-				<< "\n";
+			log->SC_log(Log::INFO) << "OR: x" << rs1 << " OR x" << rs2 << "-> x"
+					<< rd << "\n";
 		}
 
 		return true;
 	}
 
 	bool Exec_AND() const {
-		int rd, rs1, rs2;
-		uint32_t calc;
+		T rd, rs1, rs2;
+		T calc;
 
 		rd = get_rd();
 		rs1 = get_rs1();
@@ -1245,8 +1267,8 @@ public:
 		regs->setValue(rd, calc);
 
 		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "AND: x" << rs1 << " AND x" << rs2 << "-> x" << rd
-				<< "\n";
+			log->SC_log(Log::INFO) << "AND: x" << rs1 << " AND x" << rs2
+					<< "-> x" << rd << "\n";
 		}
 
 		return true;
@@ -1312,8 +1334,8 @@ public:
 		regs->setCSR(csr, aux);
 
 		log->SC_log(Log::INFO) << std::hex << "CSRRW: CSR #" << csr << " -> x"
-				<< std::dec << rd << ". x" << rs1 << "-> CSR #" << std::hex << csr
-				<< " (0x" << aux << ")" << "\n";
+				<< std::dec << rd << ". x" << rs1 << "-> CSR #" << std::hex
+				<< csr << " (0x" << aux << ")" << "\n";
 
 		return true;
 	}
@@ -1342,9 +1364,9 @@ public:
 		aux2 = aux | bitmask;
 		regs->setCSR(csr, aux2);
 
-		log->SC_log(Log::INFO) << "CSRRS: CSR #" << csr << "(0x" << std::hex << aux
-				<< ") -> x" << std::dec << rd << ". x" << rs1 << " & CSR #" << csr
-				<< " <- 0x" << std::hex << aux2 << "\n";
+		log->SC_log(Log::INFO) << "CSRRS: CSR #" << csr << "(0x" << std::hex
+				<< aux << ") -> x" << std::dec << rd << ". x" << rs1
+				<< " & CSR #" << csr << " <- 0x" << std::hex << aux2 << "\n";
 
 		return true;
 	}
@@ -1373,9 +1395,9 @@ public:
 		aux2 = aux & ~bitmask;
 		regs->setCSR(csr, aux2);
 
-		log->SC_log(Log::INFO) << "CSRRC: CSR #" << csr << "(0x" << std::hex << aux
-				<< ") -> x" << std::dec << rd << ". x" << rs1 << " & CSR #" << csr
-				<< " <- 0x" << std::hex << aux2 << "\n";
+		log->SC_log(Log::INFO) << "CSRRC: CSR #" << csr << "(0x" << std::hex
+				<< aux << ") -> x" << std::dec << rd << ". x" << rs1
+				<< " & CSR #" << csr << " <- 0x" << std::hex << aux2 << "\n";
 
 		return true;
 	}
@@ -1397,8 +1419,8 @@ public:
 		aux = rs1;
 		regs->setCSR(csr, aux);
 
-		log->SC_log(Log::INFO) << "CSRRWI: CSR #" << csr << " -> x" << rd << ". x"
-				<< rs1 << "-> CSR #" << csr << "\n";
+		log->SC_log(Log::INFO) << "CSRRWI: CSR #" << csr << " -> x" << rd
+				<< ". x" << rs1 << "-> CSR #" << csr << "\n";
 
 		return true;
 	}
@@ -1424,9 +1446,9 @@ public:
 		aux = aux | bitmask;
 		regs->setCSR(csr, aux);
 
-		log->SC_log(Log::INFO) << "CSRRSI: CSR #" << csr << " -> x" << rd << ". x"
-				<< rs1 << " & CSR #" << csr << "(0x" << std::hex << aux << ")"
-				<< "\n";
+		log->SC_log(Log::INFO) << "CSRRSI: CSR #" << csr << " -> x" << rd
+				<< ". x" << rs1 << " & CSR #" << csr << "(0x" << std::hex << aux
+				<< ")" << "\n";
 
 		return true;
 	}
@@ -1452,9 +1474,9 @@ public:
 		aux = aux & ~bitmask;
 		regs->setCSR(csr, aux);
 
-		log->SC_log(Log::INFO) << "CSRRCI: CSR #" << csr << " -> x" << rd << ". x"
-				<< rs1 << " & CSR #" << csr << "(0x" << std::hex << aux << ")"
-				<< "\n";
+		log->SC_log(Log::INFO) << "CSRRCI: CSR #" << csr << " -> x" << rd
+				<< ". x" << rs1 << " & CSR #" << csr << "(0x" << std::hex << aux
+				<< ")" << "\n";
 
 		return true;
 	}
@@ -1850,5 +1872,90 @@ public:
 	}
 
 };
+
+/* template specialization for RV32*/
+template<>
+bool BASE_ISA<uint32_t>::Exec_LW() const {
+	uint32_t mem_addr = 0;
+	uint32_t rd, rs1;
+	int32_t imm = 0;
+	uint32_t data;
+
+	rd = get_rd();
+	rs1 = get_rs1();
+	imm = get_imm_I();
+
+	mem_addr = imm + regs->getValue(rs1);
+	data = mem_intf->readDataMem(mem_addr, 4);
+	perf->dataMemoryRead();
+
+	regs->setValue(rd, data);
+
+	if (log->getLogLevel() >= Log::INFO) {
+		log->SC_log(Log::INFO) << std::dec << "LW: x" << rs1 << "(0x"
+				<< std::hex << regs->getValue(rs1) << ") + " << std::dec << imm
+				<< " (@0x" << std::hex << mem_addr << std::dec << ") -> x" << rd
+				<< std::hex << " (0x" << data << ")" << "\n";
+	}
+	return true;
+}
+
+/* template specialization for RV64*/
+template<>
+bool BASE_ISA<uint64_t>::Exec_LW() const {
+	uint64_t mem_addr = 0;
+	uint64_t rd, rs1;
+	int32_t imm = 0;
+	uint64_t data;
+
+	rd = get_rd();
+	rs1 = get_rs1();
+	imm = get_imm_I();
+
+	mem_addr = imm + regs->getValue(rs1);
+	data = mem_intf->readDataMem(mem_addr, 4);
+	perf->dataMemoryRead();
+
+	/* sign extension from 32 bit to 64bit */
+	data = (data << 32) >> 32;
+	regs->setValue(rd, data);
+
+	if (log->getLogLevel() >= Log::INFO) {
+		log->SC_log(Log::INFO) << std::dec << "LW: x" << rs1 << "(0x"
+				<< std::hex << regs->getValue(rs1) << ") + " << std::dec << imm
+				<< " (@0x" << std::hex << mem_addr << std::dec << ") -> x" << rd
+				<< std::hex << " (0x" << data << ")" << "\n";
+	}
+	return true;
+}
+
+/*
+ * Present only in RV64, template specialization
+ */
+template<>
+bool BASE_ISA<uint64_t>::Exec_LD() const {
+	uint64_t mem_addr = 0;
+	uint64_t rd, rs1;
+	int32_t imm = 0;
+	uint64_t data;
+
+	rd = get_rd();
+	rs1 = get_rs1();
+	imm = get_imm_I();
+
+	mem_addr = imm + regs->getValue(rs1);
+	data = mem_intf->readDataMem(mem_addr, 8);
+	perf->dataMemoryRead();
+	regs->setValue(rd, data);
+
+	if (log->getLogLevel() >= Log::INFO) {
+		log->SC_log(Log::INFO) << std::dec << "LW: x" << rs1 << "(0x"
+				<< std::hex << regs->getValue(rs1) << ") + " << std::dec << imm
+				<< " (@0x" << std::hex << mem_addr << std::dec << ") -> x" << rd
+				<< std::hex << " (0x" << data << ")" << "\n";
+	}
+
+	return true;
+}
 
 #endif
