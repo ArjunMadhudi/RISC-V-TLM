@@ -32,7 +32,7 @@ std::string filename;
  * @brief Top simulation entity
  */
 SC_MODULE(Simulator) {
-	CPU<uint32_t> *cpu;
+	CPU<uint64_t> *cpu;
 	Memory *MainMemory;
 	BusCtrl *Bus;
 	Trace *trace;
@@ -44,8 +44,7 @@ SC_MODULE(Simulator) {
 		MainMemory = new Memory("Main_Memory", filename);
 		start_PC = MainMemory->getPCfromHEX();
 
-		cpu = new CPU<uint32_t>("cpu", start_PC);
-
+		cpu = new CPU<uint64_t>("cpu", start_PC);
 		Bus = new BusCtrl("BusCtrl");
 		trace = new Trace("Trace");
 		timer = new Timer("Timer");
@@ -74,7 +73,7 @@ Simulator *top;
 void intHandler(int dummy) {
 	delete top;
 	(void) dummy;
-	//sc_stop();
+	sc_core::sc_stop();
 	exit(-1);
 }
 
@@ -119,7 +118,6 @@ void process_arguments(int argc, char *argv[]) {
 			break;
 		default:
 			std::cout << "unknown" << std::endl;
-
 		}
 	}
 
@@ -130,7 +128,7 @@ void process_arguments(int argc, char *argv[]) {
 
 int sc_main(int argc, char *argv[]) {
 
-  Performance *perf = Performance::getInstance();
+	Performance *perf = Performance::getInstance();
 
 	/* Capture Ctrl+C and finish the simulation */
 	signal(SIGINT, intHandler);
@@ -150,8 +148,10 @@ int sc_main(int argc, char *argv[]) {
 	std::chrono::duration<double> elapsed_seconds = end - start;
 	double instructions = perf->getInstructions() / elapsed_seconds.count();
 
-	std::cout << "Total elapsed time: " << elapsed_seconds.count() << "s" << std::endl;
-	std::cout << "Simulated " << int(std::round(instructions)) << " instr/sec" << std::endl;
+	std::cout << "Total elapsed time: " << elapsed_seconds.count() << "s"
+			<< std::endl;
+	std::cout << "Simulated " << int(std::round(instructions)) << " instr/sec"
+			<< std::endl;
 	std::cout << "Press Enter to finish" << std::endl;
 	std::cin.ignore();
 

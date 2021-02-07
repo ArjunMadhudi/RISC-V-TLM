@@ -48,6 +48,8 @@ enum {
 	SB_F = 0b000,
 	SH_F = 0b001,
 	SW_F = 0b010,
+	SD_F = 0b011,
+
 
 	ADDI = 0b0010011,
 	ADDI_F = 0b000,
@@ -88,6 +90,8 @@ enum {
 	WFI_F = 0b000100000101,
 	SFENCE_F = 0b0001001,
 
+	ADDIW_F = 0b0011011,
+
 	ECALL_F3 = 0b000,
 	CSRRW = 0b001,
 	CSRRS = 0b010,
@@ -115,10 +119,12 @@ typedef enum {
 	OP_LW,
 	OP_LBU,
 	OP_LHU,
+	OP_LD,
 
 	OP_SB,
 	OP_SH,
 	OP_SW,
+	OP_SD,
 
 	OP_ADDI,
 	OP_SLTI,
@@ -144,6 +150,11 @@ typedef enum {
 	OP_FENCE,
 	OP_ECALL,
 	OP_EBREAK,
+
+	OP_ADDIW,
+	OP_SLLIW,
+	OP_SRLIW,
+	OP_SRAIW,
 
 	OP_CSRRW,
 	OP_CSRRS,
@@ -373,6 +384,7 @@ public:
 		LW_F = 0b010,
 		LBU_F = 0b100,
 		LHU_F = 0b101,
+		LD_F = 0b011,
 
 		SB = 0b0100011,
 		SB_F = 0b000,
@@ -417,6 +429,12 @@ public:
 		MRET_F = 0b001100000010,
 		WFI_F = 0b000100000101,
 		SFENCE_F = 0b0001001,
+
+		ADDIW = 0b0011011,
+		ADDIW_F3 = 0b000,
+		SLLIW_F3 = 0b001,
+		SRLIW_F3 = 0b101,
+		SRAIW_F3 = 0b101,
 
 		ECALL_F3 = 0b000,
 		CSRRW = 0b001,
@@ -844,34 +862,8 @@ public:
 		return true;
 	}
 
-	/*
-	 * Present only in RV64, template specialization
-	 */
-	template<uint64_t>
-	bool Exec_SD() const {
-		T mem_addr = 0;
-		T rs1, rs2;
-		int32_t imm = 0;
-		T data;
-
-		rs1 = get_rs1();
-		rs2 = get_rs2();
-		imm = get_imm_S();
-
-		mem_addr = imm + regs->getValue(rs1);
-		data = regs->getValue(rs2);
-
-		mem_intf->writeDataMem(mem_addr, data, 8);
-		perf->dataMemoryWrite();
-
-		if (log->getLogLevel() >= Log::INFO) {
-			log->SC_log(Log::INFO) << "SD: x" << std::dec << rs2 << "(0x"
-					<< std::hex << data << ") -> x" << std::dec << rs1
-					<< " + 0x" << std::hex << imm << " (@0x" << std::hex
-					<< mem_addr << std::dec << ")" << "\n";
-		}
-		return true;
-	}
+	/* template specialization */
+	bool Exec_SD() const;
 
 	bool Exec_ADDI() const {
 		T rd, rs1;
@@ -887,6 +879,27 @@ public:
 
 		if (log->getLogLevel() >= Log::INFO) {
 			log->SC_log(Log::INFO) << "ADDI: x" << std::dec << rs1 << " + "
+					<< imm << " -> x" << std::dec << rd << "(0x" << std::hex
+					<< calc << ")" << "\n";
+		}
+
+		return true;
+	}
+
+	bool Exec_ADDIW() const {
+		T rd, rs1;
+		int32_t imm = 0;
+		T calc;
+
+		rd = get_rd();
+		rs1 = get_rs1();
+		imm = get_imm_I();
+
+		calc = regs->getValue(rs1) + imm;
+		regs->setValue(rd, calc);
+
+		if (log->getLogLevel() >= Log::INFO) {
+			log->SC_log(Log::INFO) << "ADDIW: x" << std::dec << rs1 << " + "
 					<< imm << " -> x" << std::dec << rd << "(0x" << std::hex
 					<< calc << ")" << "\n";
 		}
@@ -1572,6 +1585,9 @@ public:
 			Exec_BGEU();
 			PC_not_affected = false;
 			break;
+		case OP_LD:
+			Exec_LD();
+			break;
 		case OP_LB:
 			Exec_LB();
 			break;
@@ -1595,6 +1611,9 @@ public:
 			break;
 		case OP_SW:
 			Exec_SW();
+			break;
+		case OP_SD:
+			Exec_SD();
 			break;
 		case OP_ADDI:
 			Exec_ADDI();
@@ -1661,6 +1680,9 @@ public:
 			break;
 		case OP_EBREAK:
 			Exec_EBREAK();
+			break;
+		case OP_ADDIW:
+			Exec_ADDIW();
 			break;
 		case OP_CSRRW:
 			Exec_CSRRW();
@@ -1743,6 +1765,8 @@ public:
 				return OP_LBU;
 			case LHU_F:
 				return OP_LHU;
+			case LD_F:
+				return OP_LD;
 			}
 			return OP_ERROR;
 		case SB:
@@ -1753,6 +1777,8 @@ public:
 				return OP_SH;
 			case SW_F:
 				return OP_SW;
+			case SD_F:
+				return OP_SD;
 			}
 			return OP_ERROR;
 		case ADDI:
@@ -1777,6 +1803,8 @@ public:
 					return OP_SRLI;
 				case SRAI_F7:
 					return OP_SRAI;
+				default:
+					return OP_ERROR;
 				}
 				return OP_ERROR;
 			}
@@ -1820,6 +1848,19 @@ public:
 		} /* ADD */
 		case FENCE:
 			return OP_FENCE;
+
+		case ADDIW:
+			switch (get_funct3()) {
+			case ADDIW_F3:
+				return OP_ADDIW;
+			case SLLIW_F3:
+				return OP_SLLIW;
+			case SRLIW_F3:
+				return OP_SRLIW;
+			//case SRAIW_F3:
+			//	return OP_SRAIW;
+			}
+
 		case ECALL: {
 			switch (get_funct3()) {
 			case ECALL_F3:
@@ -1957,5 +1998,32 @@ bool BASE_ISA<uint64_t>::Exec_LD() const {
 
 	return true;
 }
+
+
+template<>
+bool BASE_ISA<uint64_t>::Exec_SD() const {
+		uint64_t mem_addr = 0;
+		uint64_t rs1, rs2;
+		int32_t imm = 0;
+		uint64_t data;
+
+		rs1 = get_rs1();
+		rs2 = get_rs2();
+		imm = get_imm_S();
+
+		mem_addr = imm + regs->getValue(rs1);
+		data = regs->getValue(rs2);
+
+		mem_intf->writeDataMem(mem_addr, data, 8);
+		perf->dataMemoryWrite();
+
+		if (log->getLogLevel() >= Log::INFO) {
+			log->SC_log(Log::INFO) << "SD: x" << std::dec << rs2 << "(0x"
+					<< std::hex << data << ") -> x" << std::dec << rs1
+					<< " + 0x" << std::hex << imm << " (@0x" << std::hex
+					<< mem_addr << std::dec << ")" << "\n";
+		}
+		return true;
+	}
 
 #endif
